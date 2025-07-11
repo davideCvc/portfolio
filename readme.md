@@ -1,251 +1,251 @@
-# Documentazione Dettagliata Sistema di Scraping e Pipeline di Elaborazione
+# Detailed Documentation: Scraping System and Data Processing Pipeline
 
-## Panoramica del Progetto
+## Project Overview
 
-Questo progetto implementa un sistema completo di web scraping progettato per estrarre e processare dati strutturati da due importanti fonti:
+This project implements a comprehensive web scraping system designed to extract and process structured data from two major sources:
 
-1. **Pagine Gialle**: estrae informazioni dettagliate sulle attività commerciali in Italia, categorizzate per regione e tipologia.
-2. **Google Maps/Reviews**: arricchisce i dati delle attività con valutazioni e recensioni da Google Maps.
+1. **Pagine Gialle (Italian Yellow Pages)**: extracts detailed information about commercial activities in Italy, categorized by region and type.
+2. **Google Maps/Reviews**: enriches business data with ratings and reviews from Google Maps.
 
-L'architettura è basata sul framework Scrapy con estensioni personalizzate per gestire il rendering JavaScript tramite Selenium per i contenuti dinamici di Google Maps, implementando una pipeline di elaborazione end-to-end.
+The architecture is based on the Scrapy framework with custom extensions to handle JavaScript rendering through Selenium for Google Maps dynamic content, implementing an end-to-end processing pipeline.
 
-## Architettura del Sistema
+## System Architecture
 
-Il sistema è organizzato con una chiara separazione delle componenti:
+The system is organized with clear separation of components:
 
 ```
 /
 ├── src/
 │   ├── scrapers/
-│   │   ├── pagine_gialle_scraper/    # Scraper per Pagine Gialle
-│   │   └── google_reviews/           # Scraper per Google Maps/Reviews
-│   ├── data_processing/              # Elaborazione dati
+│   │   ├── pagine_gialle_scraper/    # Pagine Gialle scraper
+│   │   └── google_reviews/           # Google Maps/Reviews scraper
+│   ├── data_processing/              # Data processing
 │   │   ├── data_cleaning_pagine_gialle/
 │   │   └── data_cleaning_reviews/
-│   └── pipeline/                     # Orchestrazione del flusso di lavoro
+│   └── pipeline/                     # Workflow orchestration
 │       └── pipeline_executor.py
 ├── data/
-│   ├── raw/                          # Dati grezzi
+│   ├── raw/                          # Raw data
 │   │   ├── raw_post_pagine_gialle/
 │   │   └── raw_post_google_reviews/
-│   └── processed_data/               # Dati elaborati
+│   └── processed_data/               # Processed data
 │       ├── clean_post_pagine_gialle/
 │       └── clean_post_google_reviews/
-├── config/                           # File di configurazione
+├── config/                           # Configuration files
 │   └── regioni_paesi.json
-├── logs/                             # Log e report
+├── logs/                             # Logs and reports
 │   └── pipeline_reports/
-└── temp/                             # File temporanei
+└── temp/                             # Temporary files
 ```
 
 ## Pipeline Executor
 
-La classe `PipelineExecutor` coordina l'intera pipeline di elaborazione, garantendo un flusso di lavoro coerente e gestendo gli errori in ogni fase.
+The `PipelineExecutor` class coordinates the entire processing pipeline, ensuring consistent workflow and managing errors at each stage.
 
-### Caratteristiche Principali
+### Key Features
 
-- **Modularità**: Suddivide il processo in passaggi distinti e ben definiti
-- **Gestione degli Errori**: Log dettagliati e recupero da errori
-- **Configurabilità**: Parametrizzato per regione e categoria
-- **Reporting**: Genera report completi di esecuzione
+- **Modularity**: Divides the process into distinct and well-defined steps
+- **Error Handling**: Detailed logging and error recovery
+- **Configurability**: Parameterized by region and category
+- **Reporting**: Generates comprehensive execution reports
 
-### Flusso di Esecuzione
+### Execution Flow
 
-1. **Inizializzazione e Verifica**: Controllo della struttura del progetto e creazione delle directory necessarie
-2. **Raccolta dati da Pagine Gialle**: Estrazione sistematica per ogni località della regione
-3. **Normalizzazione dei dati Pagine Gialle**: Pulizia e standardizzazione
-4. **Raccolta rating e recensioni da Google Maps**: Arricchimento con dati da Google
-5. **Normalizzazione dati con recensioni**: Elaborazione finale e integrazione
+1. **Initialization and Verification**: Project structure validation and necessary directory creation
+2. **Pagine Gialle Data Collection**: Systematic extraction for each locality in the region
+3. **Pagine Gialle Data Normalization**: Cleaning and standardization
+4. **Google Maps Rating and Review Collection**: Data enrichment with Google data
+5. **Review Data Normalization**: Final processing and integration
 
-## 1. Scraper di Pagine Gialle
+## 1. Pagine Gialle Scraper
 
-### Componenti Principali
+### Main Components
 
-- **Spider (`pagine_gialle.py`)**: coordina l'estrazione dei dati da Pagine Gialle
-- **Items (`items.py`)**: definisce la struttura dei dati estratti
-- **Middlewares (`middlewares.py`)**: fornisce hook per la personalizzazione del comportamento di Scrapy
-- **Pipelines (`pipelines.py`)**: gestisce la post-elaborazione e il salvataggio dei dati
-- **Settings (`settings.py`)**: configura i parametri operativi dello spider
+- **Spider (`pagine_gialle.py`)**: coordinates data extraction from Pagine Gialle
+- **Items (`items.py`)**: defines the structure of extracted data
+- **Middlewares (`middlewares.py`)**: provides hooks for customizing Scrapy behavior
+- **Pipelines (`pipelines.py`)**: handles post-processing and data saving
+- **Settings (`settings.py`)**: configures spider operational parameters
 
-### Funzionamento
+### Operation
 
-Lo spider estrae sistematicamente informazioni aziendali dalle pagine JSON di Pagine Gialle utilizzando un metodo paginato. Per ogni attività commerciale, raccoglie:
+The spider systematically extracts business information from Pagine Gialle JSON pages using a paginated method. For each commercial activity, it collects:
 
-- Nome dell'azienda
-- Indirizzo completo (via, città, provincia, CAP)
-- Contatti (telefono, email)
-- Sito web
-- Categoria
-- Descrizione
-- Coordinate geografiche (latitudine e longitudine)
-- Metadati relativi alla regione e categoria
+- Company name
+- Complete address (street, city, province, ZIP code)
+- Contact information (phone, email)
+- Website
+- Category
+- Description
+- Geographic coordinates (latitude and longitude)
+- Region and category metadata
 
-### Caratteristiche Tecniche
+### Technical Features
 
-1. **Gestione dello Stato**: Implementa un sistema di persistenza dello stato per consentire la ripresa in caso di interruzione, salvando il progresso in file JSON.
+1. **State Management**: Implements a state persistence system to allow resumption after interruption, saving progress to JSON files.
 
-2. **User-Agent Rotazione**: Utilizza `fake_useragent` per variare dinamicamente gli User-Agent e minimizzare il rischio di rilevamento.
+2. **User-Agent Rotation**: Uses `fake_useragent` to dynamically vary User-Agents and minimize detection risk.
 
-3. **Sistema di Proxy Rotante**: Configura middleware per la rotazione di proxy, migliorando la resilienza contro blocchi IP.
+3. **Rotating Proxy System**: Configures middleware for proxy rotation, improving resilience against IP blocks.
 
-4. **Throttling Intelligente**: Implementa ritardi randomizzati e autothrottling per evitare sovraccarichi del server target.
+4. **Intelligent Throttling**: Implements randomized delays and auto-throttling to avoid target server overload.
 
-5. **Gestione degli Errori**: Include meccanismi di gestione degli errori e callback specifici per gestire fallimenti nelle richieste HTTP.
+5. **Error Handling**: Includes error handling mechanisms and specific callbacks to manage HTTP request failures.
 
-6. **Elaborazione Dati Robusta**: La funzione `clean_value()` gestisce vari tipi di dati (stringhe, liste, null) garantendo output consistenti.
+6. **Robust Data Processing**: The `clean_value()` function handles various data types (strings, lists, null) ensuring consistent output.
 
-## 2. Scraper di Google Reviews
+## 2. Google Reviews Scraper
 
-### Componenti Principali
+### Main Components
 
-- **Spider (`google_maps_spider.py`)**: coordina l'estrazione dei dati da Google Maps
-- **Middleware Selenium personalizzato**: gestisce il rendering JavaScript e l'automazione del browser
-- **Sistema di persistenza e recovery**: implementa salvataggio stato e backup automatici
+- **Spider (`google_maps_spider.py`)**: coordinates data extraction from Google Maps
+- **Custom Selenium Middleware**: handles JavaScript rendering and browser automation
+- **Persistence and Recovery System**: implements state saving and automatic backups
 
-### Funzionamento
+### Operation
 
-Questo scraper prende in input i dati normalizzati dal primo spider (Pagine Gialle) e:
+This scraper takes normalized data from the first spider (Pagine Gialle) as input and:
 
-1. Cerca ogni attività su Google Maps utilizzando nome e città
-2. Analizza i risultati e seleziona il miglior match utilizzando algoritmi di similarità del testo
-3. Estrae valutazioni (rating) e conteggio recensioni
-4. Verifica la corrispondenza degli indirizzi per garantire l'accuratezza dei dati
+1. Searches for each business on Google Maps using name and city
+2. Analyzes results and selects the best match using text similarity algorithms
+3. Extracts ratings and review counts
+4. Verifies address correspondence to ensure data accuracy
 
-### Caratteristiche Tecniche
+### Technical Features
 
-1. **Integrazione Selenium-Scrapy**: Implementa un middleware personalizzato (`CustomSeleniumMiddleware`) che integra Selenium con Scrapy per gestire il rendering JavaScript.
+1. **Selenium-Scrapy Integration**: Implements a custom middleware (`CustomSeleniumMiddleware`) that integrates Selenium with Scrapy to handle JavaScript rendering.
 
-2. **Gestione delle Risorse del Browser**:
-   - Gestione automatica del driver Chrome attraverso `webdriver_manager`
-   - Pulizia dei profili temporanei del browser
-   - Ottimizzazione della memoria attraverso la chiusura controllata delle istanze del browser
+2. **Browser Resource Management**:
+   - Automatic Chrome driver management through `webdriver_manager`
+   - Temporary browser profile cleanup
+   - Memory optimization through controlled browser instance closure
 
-3. **Algoritmi di Matching Avanzati**:
-   - Utilizza `SequenceMatcher` per calcolare la similarità tra stringhe
-   - Implementa funzioni personalizzate come `check_location_similarity()` e `normalize_address()`
-   - Applica pesi differenti a nome e città per migliorare l'accuratezza del matching
+3. **Advanced Matching Algorithms**:
+   - Uses `SequenceMatcher` to calculate string similarity
+   - Implements custom functions like `check_location_similarity()` and `normalize_address()`
+   - Applies different weights to name and city to improve matching accuracy
 
-4. **Sistema di Recovery Avanzato**:
-   - Backup automatico ogni 10 elementi elaborati
-   - File di stato separati per ogni combinazione regione/categoria
-   - Gestione dei segnali (es. SIGINT) per chiusure controllate
+4. **Advanced Recovery System**:
+   - Automatic backup every 10 processed items
+   - Separate state files for each region/category combination
+   - Signal handling (e.g., SIGINT) for controlled shutdowns
 
-5. **Debugging Avanzato**:
-   - Screenshot automatici delle pagine per debugging
-   - Logging dettagliato con livelli di verbosità configurabili
-   - Tracciamento completo degli errori
+5. **Advanced Debugging**:
+   - Automatic page screenshots for debugging
+   - Detailed logging with configurable verbosity levels
+   - Complete error tracing
 
-6. **Gestione Cookie e Consenso**: Implementa funzioni per gestire automaticamente popup di consenso cookie e GDPR.
+6. **Cookie and Consent Management**: Implements functions to automatically handle cookie consent and GDPR popups.
 
-## 3. Processo di Normalizzazione dei Dati
+## 3. Data Normalization Process
 
-### Normalizzazione Dati Pagine Gialle
+### Pagine Gialle Data Normalization
 
-Lo script `cleanData.py` esegue operazioni di pulizia e standardizzazione sui dati grezzi estratti da Pagine Gialle:
+The `cleanData.py` script performs cleaning and standardization operations on raw data extracted from Pagine Gialle:
 
-1. Rimuove duplicati basati su identificatori univoci
-2. Standardizza formati di dati (indirizzi, numeri di telefono, ecc.)
-3. Separa campi compositi (es. indirizzo completo in componenti separate)
-4. Aggiunge metadati per facilitare l'integrazione con altre fonti
-5. Gestisce valori mancanti e anomalie dei dati
+1. Removes duplicates based on unique identifiers
+2. Standardizes data formats (addresses, phone numbers, etc.)
+3. Separates composite fields (e.g., complete address into separate components)
+4. Adds metadata to facilitate integration with other sources
+5. Handles missing values and data anomalies
 
-### Normalizzazione Dati Google Reviews
+### Google Reviews Data Normalization
 
-Lo script `cleanDataReviews.py` elabora e integra i dati delle recensioni:
+The `cleanDataReviews.py` script processes and integrates review data:
 
-1. Integra i rating con i dati principali delle attività commerciali
-2. Standardizza i formati dei valori di rating
-3. Calcola metriche aggiuntive basate sulle recensioni
-4. Gestisce casi di mancata corrispondenza tra fonti diverse
-5. Produce un dataset arricchito e pronto per l'analisi
+1. Integrates ratings with main business data
+2. Standardizes rating value formats
+3. Calculates additional metrics based on reviews
+4. Handles cases of mismatch between different sources
+5. Produces an enriched dataset ready for analysis
 
-## Orchestrazione della Pipeline
+## Pipeline Orchestration
 
-Il `PipelineExecutor` coordina il flusso di lavoro completo utilizzando un approccio modulare:
+The `PipelineExecutor` coordinates the complete workflow using a modular approach:
 
-### Inizializzazione
+### Initialization
 
 ```python
 def __init__(self, region, category, base_path=None):
     """
-    Inizializza l'esecutore della pipeline
+    Initialize the pipeline executor
     
     Args:
-        region (str): Regione di destinazione (es. 'emilia_romagna')
-        category (str): Categoria di destinazione (es. 'ristoranti')
-        base_path (str, optional): Percorso base del progetto
+        region (str): Target region (e.g., 'emilia_romagna')
+        category (str): Target category (e.g., 'ristoranti')
+        base_path (str, optional): Project base path
     """
-    # Inizializzazione attributi e struttura directory
+    # Initialize attributes and directory structure
 ```
 
-### Gestione dell'Esecuzione dei Comandi
+### Command Execution Management
 
 ```python
 def execute_command(self, command, cwd=None, description="", capture_output=True):
     """
-    Esegue un comando di sistema con gestione degli errori
+    Execute a system command with error handling
     
     Args:
-        command (str): Comando da eseguire
-        cwd (str, optional): Directory di lavoro
-        description (str, optional): Descrizione del comando per i log
-        capture_output (bool): Se catturare l'output o mostrarlo direttamente sul terminale
+        command (str): Command to execute
+        cwd (str, optional): Working directory
+        description (str, optional): Command description for logs
+        capture_output (bool): Whether to capture output or show directly on terminal
         
     Returns:
-        bool: True se l'esecuzione è riuscita, False altrimenti
+        bool: True if execution succeeded, False otherwise
     """
-    # Implementazione della gestione del comando
+    # Command handling implementation
 ```
 
-### Passaggi della Pipeline
+### Pipeline Steps
 
-1. **Raccolta dati da Pagine Gialle**:
+1. **Pagine Gialle Data Collection**:
    ```python
    def step1_collect_pagine_gialle(self):
-       """Executes the Pagine Gialle spider to collect raw data into a single file"""
-       # Implementazione dello step 1
+       """Execute the Pagine Gialle spider to collect raw data into a single file"""
+       # Step 1 implementation
    ```
 
-2. **Normalizzazione dei dati di Pagine Gialle**:
+2. **Pagine Gialle Data Normalization**:
    ```python
    def step2_normalize_pagine_gialle_data(self):
-       """Normalizza i dati grezzi di Pagine Gialle"""
-       # Implementazione dello step 2
+       """Normalize raw Pagine Gialle data"""
+       # Step 2 implementation
    ```
 
-3. **Raccolta dati da Google Maps**:
+3. **Google Maps Data Collection**:
    ```python
    def step3_collect_google_reviews(self):
-       """Raccoglie rating e recensioni da Google Maps"""
-       # Implementazione dello step 3
+       """Collect ratings and reviews from Google Maps"""
+       # Step 3 implementation
    ```
 
-4. **Normalizzazione dei dati con recensioni**:
+4. **Review Data Normalization**:
    ```python
    def step4_normalize_review_data(self):
-       """Normalizza i dati con recensioni e rating"""
-       # Implementazione dello step 4
+       """Normalize data with reviews and ratings"""
+       # Step 4 implementation
    ```
 
-### Esecuzione dell'Intera Pipeline
+### Full Pipeline Execution
 
 ```python
 def execute_pipeline(self):
-    """Esegue l'intera pipeline dall'inizio alla fine"""
-    logger.info(f"INIZIO PIPELINE per {self.region} - {self.category}")
+    """Execute the entire pipeline from start to finish"""
+    logger.info(f"PIPELINE START for {self.region} - {self.category}")
     self.verify_project_structure()
-    # Esecuzione sequenziale dei passaggi
-    # Generazione del report finale
+    # Sequential step execution
+    # Final report generation
 ```
 
-## Configurazione e Parametri
+## Configuration and Parameters
 
-### Scraper Pagine Gialle
+### Pagine Gialle Scraper
 
-Parametri principali nel file `settings.py`:
+Main parameters in `settings.py`:
 
 ```python
-# Throttling e concorrenza
+# Throttling and concurrency
 DOWNLOAD_DELAY = 3
 RANDOMIZE_DOWNLOAD_DELAY = True
 CONCURRENT_REQUESTS = 3
@@ -254,82 +254,82 @@ CONCURRENT_REQUESTS_PER_IP = 1
 AUTOTHROTTLE_ENABLED = True
 ```
 
-### Scraper Google Reviews
+### Google Reviews Scraper
 
-Parametri principali nel file `settings.py`:
+Main parameters in `settings.py`:
 
 ```python
-# Riduce la concorrenza per evitare troppi browser aperti
+# Reduce concurrency to avoid too many open browsers
 CONCURRENT_REQUESTS = 8
 CONCURRENT_REQUESTS_PER_DOMAIN = 4
 
-# Argumenti Selenium
+# Selenium arguments
 SELENIUM_DRIVER_ARGUMENTS = [
-    # '--headless=new',  # Commentato per debug
+    # '--headless=new',  # Commented for debugging
     '--disable-gpu',
     '--no-sandbox',
     '--disable-dev-shm-usage',
     '--disable-notifications',
-    # altri parametri...
+    # other parameters...
 ]
 ```
 
-## Struttura dei Dati
+## Data Structure
 
-### Input per Google Reviews
+### Input for Google Reviews
 
-Il sistema si aspetta dati in questo formato JSON da Pagine Gialle (già processati):
+The system expects data in this JSON format from Pagine Gialle (already processed):
 
 ```json
 [
   {
     "strutture": [
       {
-        "nome": "Nome Attività",
-        "città": "Nome Città",
+        "nome": "Business Name",
+        "città": "City Name",
         "indirizzo": "Via Example 123",
-        // altri campi...
+        // other fields...
       }
     ]
   }
 ]
 ```
 
-### Output di Google Reviews
+### Google Reviews Output
 
-I dati vengono arricchiti con:
+Data is enriched with:
 
 ```json
 {
-  "nome": "Nome Attività",
-  "città": "Nome Città",
+  "nome": "Business Name",
+  "città": "City Name",
   "indirizzo": "Via Example 123",
   "rating": "4.5",
   "review_count": "125",
   "google_url": "https://www.google.com/maps/place/...",
-  // campi originali conservati...
+  // original fields preserved...
 }
 ```
 
-## Meccanismi di Resilienza
+## Resilience Mechanisms
 
-### 1. Gestione delle Eccezioni
+### 1. Exception Handling
 
-Implementazione di try-catch dettagliati su tutti i componenti critici:
+Implementation of detailed try-catch blocks on all critical components:
 
 ```python
 try:
-    # Operazioni critiche
+    # Critical operations
 except Exception as e:
-    logger.error(f"Eccezione durante: {description}: {e}")
+    logger.error(f"Exception during: {description}: {e}")
     import traceback
     logger.error(f"Traceback: {traceback.format_exc()}")
     return False
 ```
 
-### 2. Backoff Esponenziale
+### 2. Exponential Backoff
 
-Implementazione di ritardi crescenti tra i tentativi falliti, con randomizzazione per evitare sincronizzazioni:
+Implementation of increasing delays between failed attempts, with randomization to avoid synchronization:
 
 ```python
 DOWNLOAD_DELAY = 3
@@ -337,9 +337,9 @@ RANDOMIZE_DOWNLOAD_DELAY = True
 AUTOTHROTTLE_ENABLED = True
 ```
 
-### 3. Salvataggio dello Stato
+### 3. State Saving
 
-Meccanismo di salvataggio periodico dello stato di avanzamento per consentire la ripresa:
+Periodic state saving mechanism to allow resumption:
 
 ```python
 def _save_state(self, idx):
@@ -356,9 +356,9 @@ def _save_state(self, idx):
         json.dump(state, f, indent=2)
 ```
 
-### 4. Backup Automatico
+### 4. Automatic Backup
 
-Sistema di backup periodico per prevenire la perdita di dati:
+Periodic backup system to prevent data loss:
 
 ```python
 def _manual_save_results(self):
@@ -367,21 +367,21 @@ def _manual_save_results(self):
         f"{self.region}_{self.category}_backup_{int(time.time())}.json"
     )
     
-    # Salvataggio dei dati
+    # Data saving
     with open(self.raw_path, 'w', encoding='utf-8') as f:
         json.dump(self.results, f, ensure_ascii=False, indent=2)
 ```
 
-### 5. Gestione delle Risorse
+### 5. Resource Management
 
-Pulizia sistematica delle risorse utilizzate:
-- Chiusura controllata dei driver Selenium
-- Eliminazione dei profili temporanei di Chrome
-- Rimozione dei file temporanei non più necessari
+Systematic cleanup of used resources:
+- Controlled closure of Selenium drivers
+- Removal of temporary Chrome profiles
+- Cleanup of temporary files no longer needed
 
-## Logging e Debugging
+## Logging and Debugging
 
-Il sistema implementa un sistema di logging esteso a più livelli:
+The system implements an extensive multi-level logging system:
 
 ```python
 logging.basicConfig(
@@ -394,154 +394,154 @@ logging.basicConfig(
 )
 ```
 
-### Caratteristiche del Sistema di Logging
+### Logging System Features
 
-1. **Logging Gerarchico**: Diversi livelli di dettaglio (DEBUG, INFO, WARNING, ERROR)
-2. **Registrazione su File e Console**: Output duplicato per facilitare il monitoraggio
-3. **Timestamp Precisi**: Ogni entry include data e ora esatte
-4. **Traceback Completi**: Gli errori includono il traceback completo
-5. **Reporting Strutturato**: Generazione di report JSON alla fine dell'esecuzione
+1. **Hierarchical Logging**: Different detail levels (DEBUG, INFO, WARNING, ERROR)
+2. **File and Console Logging**: Duplicated output to facilitate monitoring
+3. **Precise Timestamps**: Each entry includes exact date and time
+4. **Complete Tracebacks**: Errors include complete traceback
+5. **Structured Reporting**: JSON report generation at execution end
 
-### Modalità Debug
+### Debug Mode
 
-Attivabile tramite flag da linea di comando:
+Activatable via command line flag:
 
 ```bash
 python pipeline_executor.py --region lombardia --category ristoranti --debug
 ```
 
-Quando attivata, fornisce:
-- Log più dettagliati su ogni passaggio
-- Maggiori informazioni diagnostiche
-- Tracciamento dettagliato delle operazioni interne
+When activated, provides:
+- More detailed logs on each step
+- Enhanced diagnostic information
+- Detailed tracking of internal operations
 
-## Argomenti della Linea di Comando
+## Command Line Arguments
 
-Il `PipelineExecutor` può essere controllato tramite interfaccia CLI:
+The `PipelineExecutor` can be controlled through CLI interface:
 
 ```python
-parser = argparse.ArgumentParser(description="Esecutore della pipeline di scraping e processamento dati")
-parser.add_argument("--region", required=True, help="Regione target (es. emilia_romagna)")
-parser.add_argument("--category", required=True, help="Categoria target (es. ristoranti)")
-parser.add_argument("--base-path", help="Percorso base del progetto")
-parser.add_argument("--step", type=int, choices=[1, 2, 3, 4], help="Esegui solo un passaggio specifico")
-parser.add_argument("--debug", action="store_true", help="Attiva modalità debug")
+parser = argparse.ArgumentParser(description="Scraping and data processing pipeline executor")
+parser.add_argument("--region", required=True, help="Target region (e.g., emilia_romagna)")
+parser.add_argument("--category", required=True, help="Target category (e.g., ristoranti)")
+parser.add_argument("--base-path", help="Project base path")
+parser.add_argument("--step", type=int, choices=[1, 2, 3, 4], help="Execute only a specific step")
+parser.add_argument("--debug", action="store_true", help="Enable debug mode")
 ```
 
-### Esempi di Utilizzo
+### Usage Examples
 
-Per eseguire l'intera pipeline:
+To run the entire pipeline:
 ```bash
 python src/pipeline/pipeline_executor.py --region lombardia --category ristoranti
 ```
 
-Per eseguire solo un passaggio specifico:
+To execute only a specific step:
 ```bash
 python src/pipeline/pipeline_executor.py --region lombardia --category ristoranti --step 2
 ```
 
-Per attivare la modalità debug:
+To enable debug mode:
 ```bash
 python src/pipeline/pipeline_executor.py --region lombardia --category ristoranti --debug
 ```
 
-## Gestione delle Performance
+## Performance Management
 
-### Ottimizzazioni Pagine Gialle
+### Pagine Gialle Optimizations
 
-- Utilizzo di `RANDOMIZE_DOWNLOAD_DELAY` e `AUTOTHROTTLE_ENABLED`
-- Limitazione delle richieste concorrenti con `CONCURRENT_REQUESTS` e `CONCURRENT_REQUESTS_PER_DOMAIN`
-- Rotazione degli User-Agent per minimizzare il rilevamento
-- Gestione efficiente delle risorse con pulizia tempestiva dei file temporanei
+- Use of `RANDOMIZE_DOWNLOAD_DELAY` and `AUTOTHROTTLE_ENABLED`
+- Concurrent request limitation with `CONCURRENT_REQUESTS` and `CONCURRENT_REQUESTS_PER_DOMAIN`
+- User-Agent rotation to minimize detection
+- Efficient resource management with timely cleanup of temporary files
 
-### Ottimizzazioni Google Reviews
+### Google Reviews Optimizations
 
-- Disabilitazione del caricamento delle immagini
+- Image loading disabling
    ```python
    prefs = {"profile.managed_default_content_settings.images": 2}
    options.add_experimental_option("prefs", prefs)
    ```
-- Gestione precisa delle risorse del browser con chiusura controllata
-- Profili utente temporanei separati per ogni istanza del browser
-- Parametrizzazione delle richieste concorrenti per evitare sovraccarichi
+- Precise browser resource management with controlled closure
+- Separate temporary user profiles for each browser instance
+- Parameterized concurrent requests to avoid overload
 
-## Verifiche e Quality Assurance
+## Verification and Quality Assurance
 
-Il sistema implementa diverse verifiche per garantire l'integrità del processo:
+The system implements various checks to ensure process integrity:
 
-### Verifica della Struttura del Progetto
+### Project Structure Verification
 
 ```python
 def verify_project_structure(self):
-    """Verifica la struttura del progetto e mostra informazioni dettagliate per il debug"""
-    logger.info("Verifica della struttura del progetto...")
+    """Verify project structure and show detailed information for debugging"""
+    logger.info("Verifying project structure...")
     
     key_directories = [
         "src/scrapers/pagine_gialle_scraper",
         "src/scrapers/google_reviews",
-        # altre directory...
+        # other directories...
     ]
     
     for directory in key_directories:
         path = os.path.join(self.base_path, directory)
         if os.path.exists(path):
-            logger.info(f"Directory trovata: {path}")
-            # Ulteriori verifiche...
+            logger.info(f"Directory found: {path}")
+            # Further checks...
         else:
-            logger.warning(f"Directory mancante: {path}")
+            logger.warning(f"Missing directory: {path}")
     
-    # Verifica file di configurazione cruciali
+    # Verify crucial configuration files
     # ...
 ```
 
-### Verifica delle Dipendenze
+### Dependency Verification
 
 ```python
 def check_scrapy_installation(self):
-    """Verifica che Scrapy sia installato e funzionante."""
-    logger.info("Verifica dell'installazione di Scrapy...")
+    """Verify that Scrapy is installed and working."""
+    logger.info("Verifying Scrapy installation...")
     
-    # Verifica la versione di Scrapy
+    # Check Scrapy version
     return self.execute_command(
         "scrapy version",
-        description="Verifica versione Scrapy",
+        description="Verify Scrapy version",
         capture_output=True
     )
 ```
 
-## Limitazioni e Problematiche Note
+## Known Limitations and Issues
 
-1. **Dipendenza dal DOM di Google Maps**: Cambiamenti nell'interfaccia di Google Maps potrebbero richiedere aggiornamenti ai selettori CSS/XPath.
+1. **Google Maps DOM Dependency**: Changes in Google Maps interface might require updates to CSS/XPath selectors.
 
-2. **Rilevamento Bot**: Google Maps implementa sistemi avanzati di rilevamento bot che potrebbero bloccare le richieste nonostante le contromisure.
+2. **Bot Detection**: Google Maps implements advanced bot detection systems that might block requests despite countermeasures.
 
-3. **Gestione Cookie**: I popup di consenso cookie richiedono interazione specifica che potrebbe cambiare nel tempo.
+3. **Cookie Management**: Cookie consent popups require specific interaction that might change over time.
 
-4. **Risorse Computazionali**: L'utilizzo di Selenium richiede risorse significative, in particolare memoria e CPU.
+4. **Computational Resources**: Selenium usage requires significant resources, particularly memory and CPU.
 
-5. **Stagnazione dello Scraping**: Lo spider potrebbe bloccarsi su determinate richieste (gestito tramite timeout e retry).
+5. **Scraping Stagnation**: The spider might get stuck on certain requests (handled through timeout and retry).
 
-6. **Dipendenza da Configurazione Regionale**: Il file `regioni_paesi.json` deve essere accuratamente mantenuto e aggiornato.
+6. **Regional Configuration Dependency**: The `regioni_paesi.json` file must be accurately maintained and updated.
 
-## Best Practices Implementate
+## Implemented Best Practices
 
-1. **Log Dettagliati**: Ogni fase del processo viene registrata con livelli appropriati di verbosità.
+1. **Detailed Logging**: Every phase of the process is logged with appropriate verbosity levels.
 
-2. **Pulizia delle Risorse**: Gestione attenta della chiusura di browser e file temporanei.
+2. **Resource Cleanup**: Careful management of browser and temporary file closure.
 
-3. **Verifica dei Dati**: Controlli di qualità sui dati estratti mediante algoritmi di similarità.
+3. **Data Verification**: Quality checks on extracted data through similarity algorithms.
 
-4. **Throttling Rispettoso**: Implementazione di ritardi e limiti di concorrenza per ridurre il carico sui server target.
+4. **Respectful Throttling**: Implementation of delays and concurrency limits to reduce load on target servers.
 
-5. **Resilienza agli Errori**: Meccanismi di ripresa e backup per garantire la continuità dell'estrazione.
+5. **Error Resilience**: Recovery and backup mechanisms to ensure extraction continuity.
 
-6. **Modularità**: Separazione chiara delle responsabilità tra i diversi componenti.
+6. **Modularity**: Clear separation of responsibilities between different components.
 
-7. **Documentazione**: Codice ben documentato con docstring e commenti esplicativi.
+7. **Documentation**: Well-documented code with docstrings and explanatory comments.
 
-## Considerazioni Etiche e Legali
+## Ethical and Legal Considerations
 
-- Il sistema implementa delay e throttling per minimizzare l'impatto sui server target
-- Il rispetto delle politiche robots.txt è configurabile attraverso `ROBOTSTXT_OBEY`
-- L'uso di questo strumento deve essere conforme ai termini di servizio delle piattaforme target
-- La rotazione degli User-Agent e proxy dovrebbe essere utilizzata responsabilmente
+- The system implements delays and throttling to minimize impact on target servers
+- Respect for robots.txt policies is configurable through `ROBOTSTXT_OBEY`
+- Use of this tool must comply with target platform terms of service
+- User-Agent and proxy rotation should be used responsibly
