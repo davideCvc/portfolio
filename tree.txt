@@ -1,0 +1,64 @@
+BASIC_DATA_SCRAPER/
+├── config/
+├── data/
+│   ├── processed_data/
+│   │   ├── clean_post_google_reviews/
+│   │   │   ├── emilia_romagna/
+│   │   │   └── lombardia/
+│   │   ├── clean_post_pagine_gialle/
+│   │   │   ├── emilia_romagna/
+│   │   │   └── lombardia/
+│   └── raw/
+│       ├── raw_post_google_reviews/
+│       │   ├── emilia_romagna/
+│       │   │   ├── affittacamere/
+│       │   │   ├── ristoranti/
+│       │   │   └── web_designer/
+│       │   └── lombardia/
+│       └── raw_post_pagine_gialle/
+│           ├── emilia_romagna/
+│           │   ├── affittacamere/
+│           │   ├── ristoranti/
+│           │   └── web_designer/
+│           └── lombardia/
+├── temp/
+├── logs/
+├── src/
+│   ├── data_analysis/
+│   │   └── analysis.py
+│   ├── data_processing/
+│   │   ├── data_cleaning_pagine_gialle/
+│   │   │   ├── cleanData.py
+│   │   ├── data_cleaning_reviews/
+│   │   │   ├── cleanDataReviews.py
+│   ├── pipeline/
+│   │   ├── logs/
+│   │   ├── pipeline_reports/
+│   │   ├── pipeline_executor.py
+|   |   |__ pipeline_executor_gui.py
+├── scrapers/
+│   ├── google_reviews/
+│   │   ├── __pycache__/
+│   │   ├── spiders/
+│   │   │   ├── __init__.py
+│   │   │   ├── google_maps_spider.py
+│   │   ├── __init__.py
+│   │   ├── exit.py
+│   │   ├── items.py
+│   │   ├── middlewares.py
+│   │   ├── pipelines.py
+│   │   ├── settings.py
+│   ├── pagine_gialle_scraper/ 
+│   │   ├── __pycache__/
+│   │   ├── spiders/
+│   │   │   ├── __init__.py
+│   │   │   ├── pagineGialle.py
+│   │   ├── __init__.py
+│   │   ├── items.py
+│   │   ├── middlewares.py
+│   │   ├── pipelines.py
+│   │   ├── settings.py
+├── venv/
+├── .gitignore
+├── requirements.txt
+├── tree.txt

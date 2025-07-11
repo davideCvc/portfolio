@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pipeline Scraper - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <script src="/static/js/app.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body data-theme="light">
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <h1>
+                    <div class="icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    Lead Harvester
+                </h1>
+            </div>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-section="pipeline">
+                            <i class="fas fa-cogs"></i>
+                            Pipeline Control
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="data">
+                            <i class="fas fa-database"></i>
+                            Visualizza Dati
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="logs">
+                            <i class="fas fa-file-alt"></i>
+                            Logs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="config">
+                            <i class="fas fa-sliders-h"></i>
+                            Configurazione
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content" id="mainContent">
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="header-title">Pipeline Control Center</h1>
+                    <p class="header-subtitle">
+                        Automatizza l'estrazione di lead
+                    </p>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="menu-toggle" id="menuToggle" title="Toggle menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- SEZIONE PIPELINE CONTROL -->
+            <section id="pipeline-section" class="section active">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-sliders-h"></i>
+                        </div>
+                        <h2 class="card-title">Configurazione Pipeline</h2>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="regionSelect">Seleziona Regione</label>
+                            <select id="regionSelect" class="form-select">
+                                <option value="">-- Seleziona una Regione --</option>
+                                <option value="lombardia">Lombardia</option>
+                                <option value="veneto">Veneto</option>
+                                <option value="lazio">Lazio</option>
+                                <option value="campania">Campania</option>
+                                <option value="sicilia">Sicilia</option>
+                                <option value="piemonte">Piemonte</option>
+                                <option value="emilia_romagna">Emilia-Romagna</option>
+                                <option value="puglia">Puglia</option>
+                                <option value="toscana">Toscana</option>
+                                <option value="calabria">Calabria</option>
+                                <option value="abruzzo">abruzzo</option>
+
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="categoryInput">Categoria Business</label>
+                            <input type="text" id="categoryInput" class="form-input"
+                                placeholder="es. 'ristoranti', 'elettricisti'" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="runType">Tipo di Esecuzione</label>
+                            <select id="runType" class="form-select">
+                                <option value="full">Pipeline Completa</option>
+                                <option value="step">Esegui Step Specifico</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group hidden" id="stepSelectContainer">
+                            <label class="form-label" for="specificStepInput">Numero Step</label>
+                            <input type="number" id="specificStepInput" class="form-input" placeholder="es. 1, 2, 3"
+                                min="1" />
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="startButton" class="btn btn-primary">
+                            <i class="fas fa-play"></i>
+                            Avvia Pipeline
+                        </button>
+                        <button id="stopButton" class="btn btn-danger" disabled>
+                            <i class="fas fa-stop"></i>
+                            Ferma Pipeline
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <h2 class="card-title">Stato Pipeline</h2>
+                    </div>
+
+                    <div id="statusMessages" class="status-message status-info">
+                        <i class="fas fa-clock"></i>
+                        In attesa di avvio...
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-header">
+                            <span class="progress-label">Progresso Esecuzione</span>
+                            <span class="progress-steps">
+                                Step <span id="currentStep">0</span> di
+                                <span id="totalSteps">0</span>
+                            </span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-terminal"></i>
+                        </div>
+                        <h2 class="card-title">Log Pipeline</h2>
+                    </div>
+
+                    <div class="log-container">
+                        <div id="pipelineLog" class="log-output">
+                            <div class="log-entry log-info">
+                                <i class="fas fa-info-circle"></i>
+                                Sistema pronto. Avvia la pipeline per visualizzare i
+                                progressi.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEZIONE VISUALIZZA DATI -->
+            <section id="data-section" class="section hidden">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h2 class="card-title">Dati Estratti</h2>
+                        <div class="card-actions">
+                            <button id="refreshData" class="btn btn-secondary">
+                                <i class="fas fa-sync"></i>
+                                Aggiorna
+                            </button>
+                            <button id="exportData" class="btn btn-success">
+                                <i class="fas fa-download"></i>
+                                Esporta CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="filters-row">
+                        <div class="form-group">
+                            <label class="form-label">Filtra per Regione</label>
+                            <select id="filterRegion" class="form-select">
+                                <option value="">Tutte le Regioni</option>
+                                <option value="lombardia">Lombardia</option>
+                                <option value="veneto">Veneto</option>
+                                <option value="lazio">Lazio</option>
+                                <option value="campania">Campania</option>
+                                <option value="sicilia">Sicilia</option>
+                                <option value="piemonte">Piemonte</option>
+                                <option value="emilia-romagna">Emilia-Romagna</option>
+                                <option value="puglia">Puglia</option>
+                                <option value="toscana">Toscana</option>
+                                <option value="calabria">Calabria</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Filtra per Categoria</label>
+                            <input type="text" id="filterCategory" class="form-input"
+                                placeholder="Cerca categoria..." />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Solo con Email</label>
+                            <input type="checkbox" id="filterEmail" />
+                        </div>
+                    </div>
+
+                    <div class="stats-summary">
+                        <div class="stat-item">
+                            <span class="stat-label">Totale Lead:</span>
+                            <span class="stat-value" id="totalLeads">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Con Email:</span>
+                            <span class="stat-value" id="leadsWithEmail">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Con Telefono:</span>
+                            <span class="stat-value" id="leadsWithPhone">0</span>
+                        </div>
+                    </div>
+
+                    <div class="data-table-container">
+                        <table class="data-table" id="leadsTable">
+                            <thead>
+                                <tr>
+                                    <th>Nome Business</th>
+                                    <th>Categoria</th>
+                                    <th>Regione</th>
+                                    <th>Email</th>
+                                    <th>Telefono</th>
+                                    <th>Sito Web</th>
+                                    <th>Data Estrazione</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leadsTableBody">
+                                <!-- I dati verranno caricati qui dinamicamente -->
+                            </tbody>
+                        </table>
+                        <div id="loadingData" class="loading-message" style="display: none">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Caricamento dati...
+                        </div>
+                        <div id="noData" class="no-data-message" style="display: none">
+                            <i class="fas fa-inbox"></i>
+                            Nessun dato disponibile. Esegui prima una pipeline.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEZIONE LOGS -->
+            <section id="logs-section" class="section hidden">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <h2 class="card-title">Filtri Log</h2>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Livello Log</label>
+                            <select id="logLevelFilter" class="form-select">
+                                <option value="all">Tutti</option>
+                                <option value="info">Info</option>
+                                <option value="warning">Warning</option>
+                                <option value="error">Error</option>
+                                <option value="success">Success</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Cerca nei Log</label>
+                            <input type="text" id="searchLogs" class="form-input" placeholder="Cerca nei log..." />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Ultimi N Log</label>
+                            <select id="logLimit" class="form-select">
+                                <option value="50">50</option>
+                                <option value="100" selected>100</option>
+                                <option value="200">200</option>
+                                <option value="500">500</option>
+                                <option value="all">Tutti</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="applyLogFilters" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                            Applica Filtri
+                        </button>
+                        <button id="clearLogFilters" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Pulisci
+                        </button>
+                        <button id="exportLogs" class="btn btn-success">
+                            <i class="fas fa-download"></i>
+                            Esporta Log
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h2 class="card-title">Log Dettagliati</h2>
+                    </div>
+
+                    <div class="log-container">
+                        <div id="detailedLogs" class="log-output detailed-logs">
+                            <!-- I log verranno caricati qui dinamicamente -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEZIONE CONFIGURAZIONE -->
+            <section id="config-section" class="section hidden">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <h2 class="card-title">Configurazioni Pipeline</h2>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="setting-group">
+                            <h3 class="setting-title">Parametri Generali</h3>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Timeout Default (secondi)</label>
+                                <input type="number" id="defaultTimeout" class="form-input" value="30" min="5"
+                                    max="300" />
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Max Retry per Richiesta</label>
+                                <input type="number" id="maxRetry" class="form-input" value="3" min="1" max="10" />
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Delay tra Richieste (ms)</label>
+                                <input type="number" id="requestDelay" class="form-input" value="1000" min="100"
+                                    max="5000" />
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Debug Mode</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="debugMode" />
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="setting-group">
+                            <h3 class="setting-title">Scraping Settings</h3>
+
+                            <div class="setting-item">
+                                <label class="setting-label">User Agent Rotation</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="userAgentRotation" checked />
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Validazione Email</label>
+                                <select id="emailValidation" class="form-select">
+                                    <option value="syntax">Solo Sintassi</option>
+                                    <option value="mx">MX Record</option>
+                                    <option value="full">Completa</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Max Concurrent Requests</label>
+                                <input type="number" id="maxConcurrent" class="form-input" value="5" min="1" max="20" />
+                            </div>
+                        </div>
+
+                        <div class="setting-group">
+                            <h3 class="setting-title">Database</h3>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Auto Cleanup (giorni)</label>
+                                <input type="number" id="autoCleanup" class="form-input" value="30" min="1" max="365" />
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Backup Automatico</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="autoBackup" />
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="saveSettings" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Salva Configurazione
+                        </button>
+                        <button id="resetSettings" class="btn btn-secondary">
+                            <i class="fas fa-undo"></i>
+                            Reset Default
+                        </button>
+                        <button id="testConnection" class="btn btn-info">
+                            <i class="fas fa-plug"></i>
+                            Test Connessione
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h2 class="card-title">Gestione Database</h2>
+                    </div>
+
+                    <div class="database-actions">
+                        <div class="action-item">
+                            <div class="action-info">
+                                <h4>Backup Database</h4>
+                                <p>Crea un backup completo del database</p>
+                            </div>
+                            <button class="btn btn-primary" id="backupDb">
+                                <i class="fas fa-download"></i>
+                                Backup
+                            </button>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-info">
+                                <h4>Pulisci Database</h4>
+                                <p>Rimuovi i dati più vecchi del periodo specificato</p>
+                            </div>
+                            <button class="btn btn-warning" id="cleanDb">
+                                <i class="fas fa-trash"></i>
+                                Pulisci
+                            </button>
+                        </div>
+
+                        <div class="action-item">
+                            <div class="action-info">
+                                <h4>Statistiche Database</h4>
+                                <p>Visualizza informazioni su spazio e record</p>
+                            </div>
+                            <button class="btn btn-info" id="dbStats">
+                                <i class="fas fa-chart-bar"></i>
+                                Statistiche
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="dbStatsResult" class="db-stats-result" style="display: none">
+                        <!-- Le statistiche verranno mostrate qui -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

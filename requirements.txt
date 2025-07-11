@@ -1,0 +1,13 @@
+customtkinter==5.2.2
+fake_useragent==2.2.0
+Flask==3.1.1
+itemadapter==0.11.0
+matplotlib==3.10.3
+numpy==2.3.0
+pandas==2.3.0
+Pillow==11.2.1
+scrapy==2.13.2
+scrapy_selenium==0.0.7
+seaborn==0.13.2
+selenium==4.33.0
+webdriver_manager==4.0.2

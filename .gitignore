@@ -1,0 +1,25 @@
+# Cartelle da ignorare
+__pycache__/
+venv/   
+.idea/
+.DS_Store
+.scrapy/
+
+
+# File temporanei
+*.log
+*.tmp
+
+google-chrome-stable_current_amd64.deb
+google_reviews_scraper/google-chrome-stable_current_amd64.deb
+
+venv_gui
+node_modules/
+
+*package-lock.json
+*output.css
+*scraping_state.json
+
+raw/
+processed_data/
+temp/
